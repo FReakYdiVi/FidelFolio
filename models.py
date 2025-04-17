@@ -674,83 +674,63 @@ X_train, X_test, y_train, y_test = train_test_split(
 #     # print(f"Test RMSE for {target}: {rmse:.4f}")
 
 
-#----------> Transformer
+# #----------> Transformer
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from torch.nn.utils.rnn import pad_sequence
-import numpy as np
-import pandas as pd
-
-
-
-
-# 1. Define the Transformer model for time-series forecasting
-class TransformerModel(nn.Module):
-    def __init__(self, input_size, d_model, nhead, num_layers, dim_feedforward, output_size, dropout=0.3):
-        super(TransformerModel, self).__init__()
-        self.input_linear = nn.Linear(input_size, d_model)
-        self.pos_encoder = nn.Parameter(torch.zeros(1, 500, d_model))  # max seq_len = 500
-        encoder_layer = nn.TransformerEncoderLayer(d_model, nhead, dim_feedforward, dropout, batch_first=True)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers)
-        self.dropout = nn.Dropout(dropout)
-        self.fc_out = nn.Linear(d_model, output_size)
-
-    def forward(self, x):
-        x = self.input_linear(x)
-        x = x + self.pos_encoder[:, :x.size(1), :]
-        x = self.transformer_encoder(x)
-        out = self.dropout(x[:, -1, :])  # last time step
-        return self.fc_out(out)
-
-# Prepare the data
-features = [col for col in df.columns if 'Feature' in col]
-targets = [' Target 1 ', ' Target 2 ', ' Target 3 ']
-df_sorted = df.sort_values(by=["Company", "Year"])
-
-
-# Create dataset and loader
-class TimeSeriesDataset(Dataset):
-    def __init__(self, sequence_data):
-        self.data = sequence_data
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        return self.data[idx]
-
-task_dataset = list(zip(sequences, target_seq))
-train_dataset = TimeSeriesDataset(task_dataset)
-
-def collate_fn(batch):
-    X_list, y_list = zip(*batch)
-    return list(X_list), list(y_list)
-
-data_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate_fn)
+# import torch
+# import torch.nn as nn
+# import torch.nn.functional as F
+# import torch.optim as optim
+# from torch.utils.data import Dataset, DataLoader
+# from torch.nn.utils.rnn import pad_sequence
+# import numpy as np
+# import pandas as pd
 
 
 
 
+# # 1. Define the Transformer model for time-series forecasting
+# class TransformerModel(nn.Module):
+#     def __init__(self, input_size, d_model, nhead, num_layers, dim_feedforward, output_size, dropout=0.3):
+#         super(TransformerModel, self).__init__()
+#         self.input_linear = nn.Linear(input_size, d_model)
+#         self.pos_encoder = nn.Parameter(torch.zeros(1, 500, d_model))  # max seq_len = 500
+#         encoder_layer = nn.TransformerEncoderLayer(d_model, nhead, dim_feedforward, dropout, batch_first=True)
+#         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers)
+#         self.dropout = nn.Dropout(dropout)
+#         self.fc_out = nn.Linear(d_model, output_size)
+
+#     def forward(self, x):
+#         x = self.input_linear(x)
+#         x = x + self.pos_encoder[:, :x.size(1), :]
+#         x = self.transformer_encoder(x)
+#         out = self.dropout(x[:, -1, :])  # last time step
+#         return self.fc_out(out)
+
+# # Prepare the data
+# features = [col for col in df.columns if 'Feature' in col]
+# targets = [' Target 1 ', ' Target 2 ', ' Target 3 ']
+# df_sorted = df.sort_values(by=["Company", "Year"])
 
 
+# # Create dataset and loader
+# class TimeSeriesDataset(Dataset):
+#     def __init__(self, sequence_data):
+#         self.data = sequence_data
 
-# 2. Initialize model
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model3 = TransformerModel(
-    input_size=len(features),
-    d_model=64,
-    nhead=4,
-    num_layers=2,
-    dim_feedforward=128,
-    output_size=3
-).to(device)
+#     def __len__(self):
+#         return len(self.data)
 
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model3.parameters(), lr=0.001)
+#     def __getitem__(self, idx):
+#         return self.data[idx]
+
+# task_dataset = list(zip(sequences, target_seq))
+# train_dataset = TimeSeriesDataset(task_dataset)
+
+# def collate_fn(batch):
+#     X_list, y_list = zip(*batch)
+#     return list(X_list), list(y_list)
+
+# data_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, collate_fn=collate_fn)
 
 
 
@@ -758,74 +738,19 @@ optimizer = optim.Adam(model3.parameters(), lr=0.001)
 
 
 
-# 3. Train model
+# # 2. Initialize model
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# model3 = TransformerModel(
+#     input_size=len(features),
+#     d_model=64,
+#     nhead=4,
+#     num_layers=2,
+#     dim_feedforward=128,
+#     output_size=3
+# ).to(device)
 
-losses = []  # Initialize a list to store epoch-wise loss
-epochs = 1200
-
-for epoch in range(epochs):
-    model3.train()
-    total_loss = 0
-    for X_list, Y_list in data_loader:
-        x_batch = pad_sequence([x.to(device) for x in X_list], batch_first=True)
-        y_batch = torch.stack([y.to(device) for y in Y_list])
-
-        pred = model3(x_batch)
-        loss = criterion(pred, y_batch)
-
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        total_loss += loss.item()
-
-    avg_loss = total_loss / len(data_loader)
-    losses.append(avg_loss)  # Append average loss per epoch
-    # print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
-
-
-
-
-
-
-# 4. Save the Model
-
-torch.save(model3.state_dict(), 'Model/fidelfolio_model_transformer.pkt')
-# print("Model saved as fidelfolio_model_transformer.pkt")
-
-
-
-
-
-
-# 5. Evaluate/Predict
-model3.eval()
-preds3 = []
-actuals3 = []
-
-with torch.no_grad():
-    for X_list, Y_list in data_loader:
-        x_batch = pad_sequence([x.to(device) for x in X_list], batch_first=True)
-        y_batch = torch.stack([y.to(device) for y in Y_list])
-
-        pred3 = model3(x_batch)
-        preds3.append(pred3.cpu())
-        actuals3.append(y_batch.cpu())
-
-preds3 = torch.cat(preds3).numpy()
-actuals3 = torch.cat(actuals3).numpy()
-
-import matplotlib.pyplot as plt
-
-# plt.figure(figsize=(10, 5))
-# plt.plot(range(1, epochs + 1), losses, label='Training Loss', color='blue')
-# plt.xlabel("Epoch")
-# plt.ylabel("Loss")
-# plt.title("Training Loss vs Epoch")
-# plt.grid(True)
-# plt.legend()
-# plt.tight_layout()
-# plt.show()
+# criterion = nn.MSELoss()
+# optimizer = optim.Adam(model3.parameters(), lr=0.001)
 
 
 
@@ -833,31 +758,106 @@ import matplotlib.pyplot as plt
 
 
 
-# 6. Plot predicted vs actual for each target
+# # 3. Train model
 
+# losses = []  # Initialize a list to store epoch-wise loss
+# epochs = 1200
+
+# for epoch in range(epochs):
+#     model3.train()
+#     total_loss = 0
+#     for X_list, Y_list in data_loader:
+#         x_batch = pad_sequence([x.to(device) for x in X_list], batch_first=True)
+#         y_batch = torch.stack([y.to(device) for y in Y_list])
+
+#         pred = model3(x_batch)
+#         loss = criterion(pred, y_batch)
+
+#         optimizer.zero_grad()
+#         loss.backward()
+#         optimizer.step()
+
+#         total_loss += loss.item()
+
+#     avg_loss = total_loss / len(data_loader)
+#     losses.append(avg_loss)  # Append average loss per epoch
+#     # print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
+
+
+
+
+
+
+# # 4. Save the Model
+
+# torch.save(model3.state_dict(), 'Model/fidelfolio_model_transformer.pkt')
+# # print("Model saved as fidelfolio_model_transformer.pkt")
+
+
+
+
+
+
+# # 5. Evaluate/Predict
+# model3.eval()
+# preds3 = []
+# actuals3 = []
+
+# with torch.no_grad():
+#     for X_list, Y_list in data_loader:
+#         x_batch = pad_sequence([x.to(device) for x in X_list], batch_first=True)
+#         y_batch = torch.stack([y.to(device) for y in Y_list])
+
+#         pred3 = model3(x_batch)
+#         preds3.append(pred3.cpu())
+#         actuals3.append(y_batch.cpu())
+
+# preds3 = torch.cat(preds3).numpy()
+# actuals3 = torch.cat(actuals3).numpy()
+
+# import matplotlib.pyplot as plt
+
+# # plt.figure(figsize=(10, 5))
+# # plt.plot(range(1, epochs + 1), losses, label='Training Loss', color='blue')
+# # plt.xlabel("Epoch")
+# # plt.ylabel("Loss")
+# # plt.title("Training Loss vs Epoch")
+# # plt.grid(True)
+# # plt.legend()
+# # plt.tight_layout()
+# # plt.show()
+
+
+
+
+
+
+
+# # 6. Plot predicted vs actual for each target
+
+# # for i, target in enumerate(target_cols):
+# #     plt.figure(figsize=(6, 6))
+# #     plt.scatter(actuals3[:, i], preds3[:, i], alpha=0.5)
+# #     plt.plot([actuals3[:, i].min(), actuals3[:, i].max()],
+# #              [actuals3[:, i].min(), actuals3[:, i].max()],
+# #              'r--')
+# #     plt.xlabel(f'Actual {target}')
+# #     plt.ylabel(f'Predicted {target}')
+# #     plt.title(f'Predicted vs Actual - {target}')
+# #     plt.grid(True)
+# #     plt.tight_layout()
+# #     plt.savefig(f"Transformer_result_{target}")
+# #     plt.show()
+
+# from sklearn.metrics import mean_squared_error
+# import numpy as np
+
+
+
+
+
+
+# # 7. Calculate RMSE
 # for i, target in enumerate(target_cols):
-#     plt.figure(figsize=(6, 6))
-#     plt.scatter(actuals3[:, i], preds3[:, i], alpha=0.5)
-#     plt.plot([actuals3[:, i].min(), actuals3[:, i].max()],
-#              [actuals3[:, i].min(), actuals3[:, i].max()],
-#              'r--')
-#     plt.xlabel(f'Actual {target}')
-#     plt.ylabel(f'Predicted {target}')
-#     plt.title(f'Predicted vs Actual - {target}')
-#     plt.grid(True)
-#     plt.tight_layout()
-#     plt.savefig(f"Transformer_result_{target}")
-#     plt.show()
-
-from sklearn.metrics import mean_squared_error
-import numpy as np
-
-
-
-
-
-
-# 7. Calculate RMSE
-for i, target in enumerate(target_cols):
-    rmse = mean_squared_error(actuals3[:, i], preds3[:, i], squared=False)
-    # print(f"Test RMSE for {target}: {rmse:.4f}")
+#     rmse = mean_squared_error(actuals3[:, i], preds3[:, i], squared=False)
+#     # print(f"Test RMSE for {target}: {rmse:.4f}")
