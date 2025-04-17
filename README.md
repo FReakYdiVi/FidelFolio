@@ -78,15 +78,6 @@ Target 3: 112.21
 
 ---
 
-##  Visuals
-- Loss curves over epochs for all models
-- SHAP summary plots for feature importance
-- LIME explanations for per-instance interpretability
-
-_(Include plots in `images/` and reference them in markdown)_
-
----
-
 ##  Model Comparison
 | Model              | Attention | RMSE T1 | RMSE T2 | RMSE T3 |
 |--------------------|-----------|---------|---------|---------|
