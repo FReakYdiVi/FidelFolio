@@ -32,36 +32,36 @@ This project tackles the **FidelFolio Deep Learning Challenge**, which involves 
 - Trained for 1000 epochs
 - RMSE:
 ```
-Target 1: 106.62
-Target 2: 227.66
-Target 3: 370.31
+Target 1: 107.96
+Target 2: 203.92
+Target 3: 370.11
 ```
 
 ### 2. **LSTM (Vanilla)**
 - Sequence-aware model with final timestep target
 - Best at 2000 epochs:
 ```
-Target 1: 22.70
-Target 2: 56.97
-Target 3: 186.78
+Target 1: 22.53
+Target 2: 56.57
+Target 3: 186.59
 ```
 
 ### 3. **LSTM with Attention**
 - Uses soft attention for weighted feature aggregation
 - Best at 3000 epochs:
 ```
-Target 1: 19.44
-Target 2: 47.91
-Target 3: 175.11
+Target 1: 11.21
+Target 2: 36.21
+Target 3: 156.02
 ```
 
 ### 4. **Transformer Encoder**
 - Positional encoding + multi-head self-attention
 - Best at 1200 epochs:
 ```
-Target 1: 30.98
-Target 2: 38.77
-Target 3: 112.21
+Target 1: 33.35
+Target 2: 53.66
+Target 3: 111.83
 ```
 
 ---
@@ -81,10 +81,10 @@ Target 3: 112.21
 ##  Model Comparison
 | Model              | Attention | RMSE T1 | RMSE T2 | RMSE T3 |
 |--------------------|-----------|---------|---------|---------|
-| MLP                | No        | 106.62  | 227.66  | 370.31  |
-| LSTM               | No        | 22.70   | 56.97   | 186.78  |
-| LSTM + Attention   | Yes       | 19.44   | 47.91   | 175.11  |
-| Transformer        | Yes       | 30.98   | 38.77   | 112.21  |
+| MLP                | No        | 107.96  | 203.92  | 370.11  |
+| LSTM               | No        | 22.53  | 56.57   | 186.59  |
+| LSTM + Attention   | Yes       | 11.21   | 36.21   | 156.02  |
+| Transformer        | Yes       | 33.35   | 53.66   | 111.83  |
 
 ---
 
