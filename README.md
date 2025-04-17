@@ -90,20 +90,12 @@ Target 3: 112.21
 
 ##  Run Instructions
 ```bash
-# Install requirements
-pip install -r requirements.txt
+# Preprocess the data
+python dataprocessing.py
 
-# Run MLP training
-python train_mlp.py
+Train your preferred model
+# Uncomment only the model you want to train and run
 
-# Run LSTM
-python train_lstm.py
-
-# Run Attention LSTM
-python train_lstm_attention.py
-
-# Run Transformer
-python train_transformer.py
 ```
 
 ---
