@@ -9,7 +9,7 @@ This project tackles the **FidelFolio Deep Learning Challenge**, which involves 
 - Model complex, nonlinear relationships between financial indicators and future market cap.
 - Predict growth across **short-term (Target 1)**, **medium-term (Target 2)**, and **long-term (Target 3)**.
 - Analyze effectiveness of various model architectures (MLP, LSTM, LSTM + Attention, Transformer).
-- Use explainability tools (SHAP, LIME) for model interpretability.
+  
 
 ---
 
@@ -66,17 +66,6 @@ Target 3: 111.83
 
 ---
 
-##  Explainability
-
-###  SHAP
-- Applied on MLP model using `DeepExplainer`
-- Visualizes feature impact on prediction
-
-###  LIME
-- Applied on both MLP and LSTM models
-- For LSTM, sequences flattened and visualized for interpretability
-
----
 
 ##  Model Comparison
 | Model              | Attention | RMSE T1 | RMSE T2 | RMSE T3 |
