@@ -88,14 +88,6 @@ Target 3: 112.21
 
 ---
 
-##  Future Work
-- Try Transformer Decoder + Time2Vec
-- Incorporate macroeconomic indicators
-- Apply hyperparameter tuning with Optuna or Ray Tune
-- Explore multi-task learning loss combinations
-
----
-
 ##  Run Instructions
 ```bash
 # Install requirements
