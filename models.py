@@ -191,58 +191,6 @@ import matplotlib.pyplot as plt
 
 
 
-# 8. SHAP values for MLP 
-import shap
-
-# Sample subset (for speed)
-sample_idx = np.random.choice(len(X_test), size=200, replace=False)
-X_shap = X_test.iloc[sample_idx]
-
-# Convert to torch tensor
-X_shap_tensor = torch.tensor(X_shap.values, dtype=torch.float32).to(device)
-
-# Wrap model for SHAP
-explainer = shap.DeepExplainer(model, torch.tensor(X_train.values[:1000], dtype=torch.float32).to(device))
-shap_values = explainer.shap_values(X_shap_tensor)
-
-# # Plot SHAP summary for the first target
-# shap.summary_plot(shap_values[0], X_shap, feature_names=feature_cols, show=True)
-
-
-# 9. LIME for MLP
-
-from lime import lime_tabular
-def predict_fn(input_np):
-    model.eval()
-    with torch.no_grad():
-        input_tensor = torch.tensor(input_np, dtype=torch.float32).to(device)
-        outputs = model(input_tensor)
-        return outputs.cpu().numpy()
-explainer = lime_tabular.LimeTabularExplainer(
-    training_data=X_train.values,
-    feature_names=feature_cols,
-    mode='regression',  # change to 'classification' if your task is classification
-    verbose=True
-)
-idx = 0  # You can change this
-instance = X_test.values[idx]
-exp = explainer.explain_instance(
-    data_row=instance,
-    predict_fn=predict_fn,
-    num_features=10  # number of top features to display
-)
-# exp.show_in_notebook(show_table=True)
-# # or
-# exp.as_list()  # for a list of feature contributions
-
-
-
-
-
-
-
-
-
 #----------> LSTM MODEL
 
 import torch
@@ -428,68 +376,6 @@ for i, target in enumerate(targets):
     # print(f"Test RMSE for {target}: {rmse:.4f}")
 
 
-
-
-
-
-
-# 8. LIME for LSTM
-
-def flatten_last_k(seq_list, k=5):
-    flat_X = []
-    for seq in seq_list:
-        seq_np = seq.numpy()
-        if len(seq_np) >= k:
-            trimmed = seq_np[-k:]  # last k timesteps
-        else:
-            # pad with zeros if shorter
-            pad_len = k - len(seq_np)
-            trimmed = np.concatenate([np.zeros((pad_len, seq_np.shape[1])), seq_np])
-        flat_X.append(trimmed.flatten())
-    return np.array(flat_X)
-
-# Create flat dataset for LIME
-X_flat = flatten_last_k(sequences, k=5)  # shape: [num_samples, k * num_features]
-y_flat = np.stack(target_seq)
-
-def reconstruct_sequence_from_flat(flat_array, k=5):
-    """Convert flat vector back into a sequence tensor of shape [k, num_features]"""
-    return torch.tensor(flat_array.reshape(k, -1), dtype=torch.float32)
-
-def predict_fn_lime(input_np):
-    model1.eval()
-    input_seqs = []
-    for flat_seq in input_np:
-        seq_tensor = reconstruct_sequence_from_flat(flat_seq, k=5).to(device)
-        input_seqs.append(seq_tensor)
-    
-    with torch.no_grad():
-        packed_batch = pack_sequence(input_seqs, enforce_sorted=False)
-        outputs = model1(packed_batch)
-        return outputs.cpu().numpy()
-    
-
-from lime import lime_tabular
-
-feature_names = [f"{f}_t{t}" for t in range(5) for f in features]
-
-explainer = lime_tabular.LimeTabularExplainer(
-    training_data=X_flat,
-    feature_names=feature_names,
-    mode='regression',
-    verbose=True
-)
-
-
-idx = 0  # index of the company-sequence you want to explain
-exp = explainer.explain_instance(
-    data_row=X_flat[idx],
-    predict_fn=predict_fn_lime,
-    num_features=10  # top-k features
-)
-
-# Show explanation
-# exp.show_in_notebook(show_table=True)
 
 
 
